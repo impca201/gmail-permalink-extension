@@ -1,19 +1,10 @@
 let lastRightClickedMessage = null;
 
-function getAccountAuth() {
-  // Use the account index from the URL path (/u/0/, /u/1/, etc.)
-  // authuser=0 is equivalent to the first signed-in account, etc.
-  const match = location.pathname.match(/\/u\/(\d+)\//);
-  return match ? match[1] : null;
-}
-
-// Extract the thread token from the URL hash and return it with
-// a folder-independent prefix so the link works from any label.
-// Gmail hash format: #<folder>/<token>
+// Extract the thread token from the URL hash with a folder-independent prefix.
+// Gmail hash formats: #inbox/TOKEN, #label/NAME/TOKEN, #all/TOKEN, etc.
 function getTokenFromUrl() {
   const hash = location.hash.replace(/^#/, '');
   const parts = hash.split('/');
-  // Last non-empty segment is the token (e.g. "FMfcgzQ...")
   for (let i = parts.length - 1; i >= 0; i--) {
     if (parts[i]) return `all/${parts[i]}`;
   }
@@ -31,7 +22,7 @@ document.addEventListener('contextmenu', (event) => {
     return;
   }
   const token = getTokenFromUrl();
-  lastRightClickedMessage = token ? { token, auth: getAccountAuth() } : null;
+  lastRightClickedMessage = token ? { token } : null;
 }, true);
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
