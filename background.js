@@ -19,11 +19,11 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
 
   if (!data?.token) return;
 
-  const url = buildPermalink(data.email, data.token);
+  const url = buildPermalink(data.auth, data.token);
   await chrome.tabs.sendMessage(tab.id, { type: 'COPY_TO_CLIPBOARD', url });
 });
 
-function buildPermalink(email, token) {
-  const authParam = email ? `?authuser=${encodeURIComponent(email)}` : '';
+function buildPermalink(auth, token) {
+  const authParam = auth !== null && auth !== undefined ? `?authuser=${auth}` : '';
   return `https://mail.google.com/mail/${authParam}#${token}`;
 }

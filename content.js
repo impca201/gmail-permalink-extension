@@ -1,16 +1,8 @@
 let lastRightClickedMessage = null;
 
-function getAccountEmail() {
-  // Find hovercard emails that are NOT inside a message element (those are senders).
-  // The logged-in account's hovercard lives in the page header.
-  for (const el of document.querySelectorAll('[data-hovercard-id]')) {
-    const id = el.dataset.hovercardId;
-    if (id?.includes('@') && !el.closest('[data-legacy-message-id], [data-message-id]')) {
-      return id;
-    }
-  }
-
-  // Fall back to numeric account index from URL (e.g. /u/0/ → authuser=0)
+function getAccountAuth() {
+  // Use the account index from the URL path (/u/0/, /u/1/, etc.)
+  // authuser=0 is equivalent to the first signed-in account, etc.
   const match = location.pathname.match(/\/u\/(\d+)\//);
   return match ? match[1] : null;
 }
@@ -38,7 +30,7 @@ document.addEventListener('contextmenu', (event) => {
     return;
   }
   const token = getTokenFromUrl();
-  lastRightClickedMessage = token ? { token, email: getAccountEmail() } : null;
+  lastRightClickedMessage = token ? { token, auth: getAccountAuth() } : null;
 }, true);
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
