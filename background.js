@@ -1,7 +1,7 @@
 chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.create({
     id: 'gmail-copy-permalink',
-    title: 'Copy permalink',
+    title: chrome.i18n.getMessage('contextMenuTitle'),
     contexts: ['all'],
     documentUrlPatterns: ['https://mail.google.com/*'],
   });
