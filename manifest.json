@@ -1,8 +1,9 @@
 {
   "manifest_version": 3,
-  "name": "Gmail Permalink",
+  "name": "__MSG_extensionName__",
   "version": "1.0",
-  "description": "Right-click a Gmail message to copy a permalink directly to that message.",
+  "description": "__MSG_extensionDescription__",
+  "default_locale": "en",
   "permissions": ["contextMenus", "activeTab"],
   "host_permissions": ["https://mail.google.com/*"],
   "background": {
