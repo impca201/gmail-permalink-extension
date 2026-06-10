@@ -3,7 +3,7 @@
   "name": "Gmail Permalink",
   "version": "1.0",
   "description": "Right-click a Gmail message to copy a permalink directly to that message.",
-  "permissions": ["contextMenus", "activeTab", "identity"],
+  "permissions": ["contextMenus", "activeTab"],
   "host_permissions": ["https://mail.google.com/*"],
   "background": {
     "service_worker": "background.js"
