@@ -7,14 +7,15 @@ function getAccountAuth() {
   return match ? match[1] : null;
 }
 
-// Read the thread/message token directly from the URL hash.
-// Gmail hash format: #<folder>/<token> or #<token>
+// Extract the thread token from the URL hash and return it with
+// a folder-independent prefix so the link works from any label.
+// Gmail hash format: #<folder>/<token>
 function getTokenFromUrl() {
   const hash = location.hash.replace(/^#/, '');
   const parts = hash.split('/');
   // Last non-empty segment is the token (e.g. "FMfcgzQ...")
   for (let i = parts.length - 1; i >= 0; i--) {
-    if (parts[i]) return parts[i];
+    if (parts[i]) return `all/${parts[i]}`;
   }
   return null;
 }
