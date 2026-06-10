@@ -1,10 +1,14 @@
 let lastRightClickedMessage = null;
 
-function getAccountAuth() {
-  // Use the account index from the URL path (/u/0/, /u/1/, etc.)
-  // authuser=0 is equivalent to the first signed-in account, etc.
-  const match = location.pathname.match(/\/u\/(\d+)\//);
-  return match ? match[1] : null;
+function getAccountEmail() {
+  // The account switcher button links to SignOutOptions regardless of UI language.
+  // Its aria-label contains the email in parentheses, e.g. "Google-account: Name (email@domain.com)"
+  const btn = document.querySelector('a[href*="SignOutOptions"]');
+  if (btn) {
+    const match = btn.getAttribute('aria-label')?.match(/\(([^)]+@[^)]+)\)/);
+    if (match) return match[1];
+  }
+  return null;
 }
 
 // Extract the thread token from the URL hash and return it with
@@ -31,7 +35,7 @@ document.addEventListener('contextmenu', (event) => {
     return;
   }
   const token = getTokenFromUrl();
-  lastRightClickedMessage = token ? { token, auth: getAccountAuth() } : null;
+  lastRightClickedMessage = token ? { token, email: getAccountEmail() } : null;
 }, true);
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
