@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "Gmail Permalink",
+  "version": "1.0",
+  "description": "Right-click a Gmail message to copy a permalink directly to that message.",
+  "permissions": ["contextMenus", "activeTab"],
+  "host_permissions": ["https://mail.google.com/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://mail.google.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}
