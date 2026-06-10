@@ -1,24 +1,34 @@
 let lastRightClickedMessage = null;
 
 function getAccountEmail() {
-  const emailEl = document.querySelector('[data-email]');
-  if (emailEl?.dataset.email) return emailEl.dataset.email;
+  // Try hovercard ID (present on account avatar/name elements)
+  const hoverEl = document.querySelector('[data-hovercard-id*="@"]');
+  if (hoverEl?.dataset.hovercardId) return hoverEl.dataset.hovercardId;
 
-  const accountBtn = document.querySelector('[aria-label*="Google Account"]');
-  if (accountBtn) {
-    const match = accountBtn.getAttribute('aria-label').match(/\(([^)]+@[^)]+)\)/);
-    if (match) return match[1];
+  // Try title attribute containing an email
+  for (const el of document.querySelectorAll('[title]')) {
+    if (/@/.test(el.title)) return el.title;
   }
 
+  // Fall back to numeric account index from URL (e.g. /u/0/ → authuser=0)
+  const match = location.pathname.match(/\/u\/(\d+)\//);
+  return match ? match[1] : null;
+}
+
+// Read the thread/message token directly from the URL hash.
+// Gmail hash format: #<folder>/<token> or #<token>
+function getTokenFromUrl() {
+  const hash = location.hash.replace(/^#/, '');
+  const parts = hash.split('/');
+  // Last non-empty segment is the token (e.g. "FMfcgzQ...")
+  for (let i = parts.length - 1; i >= 0; i--) {
+    if (parts[i]) return parts[i];
+  }
   return null;
 }
 
 function findMessageElement(target) {
   return target.closest('[data-legacy-message-id], [data-message-id]');
-}
-
-function getMessageToken(el) {
-  return el.dataset.legacyMessageId || el.dataset.messageId || null;
 }
 
 document.addEventListener('contextmenu', (event) => {
@@ -27,7 +37,7 @@ document.addEventListener('contextmenu', (event) => {
     lastRightClickedMessage = null;
     return;
   }
-  const token = getMessageToken(messageEl);
+  const token = getTokenFromUrl();
   lastRightClickedMessage = token ? { token, email: getAccountEmail() } : null;
 }, true);
 
