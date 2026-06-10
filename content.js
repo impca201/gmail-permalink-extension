@@ -1,28 +1,25 @@
 let lastRightClickedMessage = null;
 
 function getAccountEmail() {
-  // Find hovercard emails that are NOT inside a message element (those are senders).
-  // The logged-in account's hovercard lives in the page header.
-  for (const el of document.querySelectorAll('[data-hovercard-id]')) {
-    const id = el.dataset.hovercardId;
-    if (id?.includes('@') && !el.closest('[data-legacy-message-id], [data-message-id]')) {
-      return id;
-    }
+  // The account switcher button links to SignOutOptions regardless of UI language.
+  // Its aria-label contains the email in parentheses, e.g. "Google-account: Name (email@domain.com)"
+  const btn = document.querySelector('a[href*="SignOutOptions"]');
+  if (btn) {
+    const match = btn.getAttribute('aria-label')?.match(/\(([^)]+@[^)]+)\)/);
+    if (match) return match[1];
   }
-
-  // Fall back to numeric account index from URL (e.g. /u/0/ → authuser=0)
-  const match = location.pathname.match(/\/u\/(\d+)\//);
-  return match ? match[1] : null;
+  return null;
 }
 
-// Read the thread/message token directly from the URL hash.
-// Gmail hash format: #<folder>/<token> or #<token>
+// Extract the thread token from the URL hash and return it with
+// a folder-independent prefix so the link works from any label.
+// Gmail hash format: #<folder>/<token>
 function getTokenFromUrl() {
   const hash = location.hash.replace(/^#/, '');
   const parts = hash.split('/');
   // Last non-empty segment is the token (e.g. "FMfcgzQ...")
   for (let i = parts.length - 1; i >= 0; i--) {
-    if (parts[i]) return parts[i];
+    if (parts[i]) return `all/${parts[i]}`;
   }
   return null;
 }
