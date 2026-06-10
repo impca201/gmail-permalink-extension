@@ -1,13 +1,13 @@
 let lastRightClickedMessage = null;
 
 function getAccountEmail() {
-  // Try hovercard ID (present on account avatar/name elements)
-  const hoverEl = document.querySelector('[data-hovercard-id*="@"]');
-  if (hoverEl?.dataset.hovercardId) return hoverEl.dataset.hovercardId;
-
-  // Try title attribute containing an email
-  for (const el of document.querySelectorAll('[title]')) {
-    if (/@/.test(el.title)) return el.title;
+  // Find hovercard emails that are NOT inside a message element (those are senders).
+  // The logged-in account's hovercard lives in the page header.
+  for (const el of document.querySelectorAll('[data-hovercard-id]')) {
+    const id = el.dataset.hovercardId;
+    if (id?.includes('@') && !el.closest('[data-legacy-message-id], [data-message-id]')) {
+      return id;
+    }
   }
 
   // Fall back to numeric account index from URL (e.g. /u/0/ → authuser=0)
