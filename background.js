@@ -1,11 +1,16 @@
-chrome.runtime.onInstalled.addListener(() => {
-  chrome.contextMenus.create({
-    id: 'gmail-copy-permalink',
-    title: chrome.i18n.getMessage('contextMenuTitle'),
-    contexts: ['all'],
-    documentUrlPatterns: ['https://mail.google.com/*'],
+function createContextMenu() {
+  chrome.contextMenus.removeAll(() => {
+    chrome.contextMenus.create({
+      id: 'gmail-copy-permalink',
+      title: chrome.i18n.getMessage('contextMenuTitle') || 'Copy permalink',
+      contexts: ['all'],
+      documentUrlPatterns: ['https://mail.google.com/*'],
+    });
   });
-});
+}
+
+chrome.runtime.onInstalled.addListener(createContextMenu);
+chrome.runtime.onStartup.addListener(createContextMenu);
 
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   if (info.menuItemId !== 'gmail-copy-permalink') return;
