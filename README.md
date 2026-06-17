@@ -12,7 +12,7 @@ This extension adds **Copy permalink** to Gmail's right-click menu. When you rig
 
 - Goes to that specific email thread
 - Works regardless of which folder or label the recipient is viewing
-- Includes your account identifier, so it opens correctly if you're signed into multiple Google accounts
+- Pins to the account you're viewing (via Gmail's `/u/<index>/` path), so it opens correctly if you're signed into multiple Google accounts — personal and Workspace alike
 
 The link uses Gmail's `#all/<token>` format, which bypasses folder routing.
 
