@@ -24,6 +24,16 @@ function getTokenFromUrl() {
   return null;
 }
 
+// Gmail puts the signed-in account index in the URL path: /mail/u/<index>/.
+// Reusing it makes the permalink open in the right account when several are
+// signed in (e.g. a personal account alongside a Workspace one). Without it,
+// a bare mail.google.com/mail/ URL always opens the default account (u/0),
+// so the thread isn't found in any other account.
+function getAccountIndex() {
+  const match = location.pathname.match(/\/mail\/u\/(\d+)\//);
+  return match ? match[1] : null;
+}
+
 function findMessageElement(target) {
   return target.closest('[data-legacy-message-id], [data-message-id]');
 }
@@ -35,7 +45,9 @@ document.addEventListener('contextmenu', (event) => {
     return;
   }
   const token = getTokenFromUrl();
-  lastRightClickedMessage = token ? { token, email: getAccountEmail() } : null;
+  lastRightClickedMessage = token
+    ? { token, email: getAccountEmail(), accountIndex: getAccountIndex() }
+    : null;
 }, true);
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
