@@ -1,11 +1,13 @@
 let lastRightClickedMessage = null;
 
 function getAccountEmail() {
-  // The account switcher button links to SignOutOptions regardless of UI language.
-  // Its aria-label contains the email in parentheses, e.g. "Google-account: Name (email@domain.com)"
-  const btn = document.querySelector('a[href*="SignOutOptions"]');
-  if (btn) {
-    const match = btn.getAttribute('aria-label')?.match(/\(([^)]+@[^)]+)\)/);
+  // The Google account switcher button exposes the signed-in address in its
+  // aria-label, e.g. "Google-account: Name (email@domain.com)", regardless of
+  // UI language. The link's href has changed across Gmail versions (it used to
+  // point at SignOutOptions), so match on the aria-label pattern instead: any
+  // element whose label contains an email in parentheses.
+  for (const el of document.querySelectorAll('[aria-label]')) {
+    const match = el.getAttribute('aria-label')?.match(/\(([^()\s]+@[^()\s]+)\)/);
     if (match) return match[1];
   }
   return null;
@@ -24,16 +26,6 @@ function getTokenFromUrl() {
   return null;
 }
 
-// Gmail puts the signed-in account index in the URL path: /mail/u/<index>/.
-// Reusing it makes the permalink open in the right account when several are
-// signed in (e.g. a personal account alongside a Workspace one). Without it,
-// a bare mail.google.com/mail/ URL always opens the default account (u/0),
-// so the thread isn't found in any other account.
-function getAccountIndex() {
-  const match = location.pathname.match(/\/mail\/u\/(\d+)\//);
-  return match ? match[1] : null;
-}
-
 function findMessageElement(target) {
   return target.closest('[data-legacy-message-id], [data-message-id]');
 }
@@ -45,9 +37,7 @@ document.addEventListener('contextmenu', (event) => {
     return;
   }
   const token = getTokenFromUrl();
-  lastRightClickedMessage = token
-    ? { token, email: getAccountEmail(), accountIndex: getAccountIndex() }
-    : null;
+  lastRightClickedMessage = token ? { token, email: getAccountEmail() } : null;
 }, true);
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {

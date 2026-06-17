@@ -24,17 +24,14 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
 
   if (!data?.token) return;
 
-  const url = buildPermalink(data.email, data.token, data.accountIndex);
+  const url = buildPermalink(data.email, data.token);
   await chrome.tabs.sendMessage(tab.id, { type: 'COPY_TO_CLIPBOARD', url });
 });
 
-function buildPermalink(email, token, accountIndex) {
-  // Prefer the explicit account index from the current URL. It reliably pins
-  // the link to the right account when several are signed in, and doesn't
-  // depend on scraping the account email from Gmail's markup.
-  if (accountIndex != null) {
-    return `https://mail.google.com/mail/u/${accountIndex}/#${token}`;
-  }
+function buildPermalink(email, token) {
+  // authuser accepts the account email directly, which routes to the right
+  // account by identity rather than by sign-in order. This keeps the link
+  // portable across browsers/devices where the /u/<index>/ would differ.
   const authParam = email ? `?authuser=${encodeURIComponent(email)}` : '';
   return `https://mail.google.com/mail/${authParam}#${token}`;
 }
