@@ -1,11 +1,13 @@
 let lastRightClickedMessage = null;
 
 function getAccountEmail() {
-  // The account switcher button links to SignOutOptions regardless of UI language.
-  // Its aria-label contains the email in parentheses, e.g. "Google-account: Name (email@domain.com)"
-  const btn = document.querySelector('a[href*="SignOutOptions"]');
-  if (btn) {
-    const match = btn.getAttribute('aria-label')?.match(/\(([^)]+@[^)]+)\)/);
+  // The Google account switcher button exposes the signed-in address in its
+  // aria-label, e.g. "Google-account: Name (email@domain.com)", regardless of
+  // UI language. The link's href has changed across Gmail versions (it used to
+  // point at SignOutOptions), so match on the aria-label pattern instead: any
+  // element whose label contains an email in parentheses.
+  for (const el of document.querySelectorAll('[aria-label]')) {
+    const match = el.getAttribute('aria-label')?.match(/\(([^()\s]+@[^()\s]+)\)/);
     if (match) return match[1];
   }
   return null;
