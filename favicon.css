@@ -1,8 +1,29 @@
-.gx-favicon {
-  width: 16px;
+.gx-domain-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 220px;
   height: 16px;
-  border-radius: 2px;
+  padding: 0 6px;
   margin-right: 4px;
+  border-radius: 4px;
+  background-color: #e1e3e1;
+  color: #444746;
+  font-size: 11px;
+  line-height: 16px;
   vertical-align: middle;
-  opacity: 0.85;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.gx-domain-favicon {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  flex: 0 0 auto;
+}
+
+.gx-domain-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

@@ -3,7 +3,7 @@
 A browser extension for Gmail with two features:
 
 1. **Copy permalink** — adds a right-click option to copy a permanent link to any email thread.
-2. **Sender favicons** — shows a small favicon next to each sender, based on their email domain.
+2. **Sender domain labels** — shows a small chip (favicon + domain name) as the first label on each conversation, based on the sender's email domain.
 
 ---
 
@@ -21,9 +21,9 @@ This extension adds **Copy permalink** to Gmail's right-click menu. When you rig
 
 The link uses Gmail's `#all/<token>` format, which bypasses folder routing.
 
-### Sender favicons
+### Sender domain labels
 
-Next to each sender — in both the message list and an open conversation — the extension shows a 16×16 favicon for that sender's email domain, fetched from Google's favicon service. It's a quick visual cue for who sent a message.
+In both the message list and an open conversation, the extension adds a small label chip — the sender domain's favicon next to the domain name — as the first item in that conversation's labels. The favicon alone is too low-res to be a reliable cue, so the readable domain text does the work; the favicon is just a hint. If a domain has no favicon, the chip shows the domain name on its own.
 
 Free/shared email providers (gmail.com, outlook.com, …) are excluded by default, since their favicon reflects the provider rather than the sender. You can edit both the default exclusion list and your own custom exclusions from the extension's popup. Settings sync across your devices via `chrome.storage.sync`.
 
@@ -86,7 +86,7 @@ That's it. You'll now see **Copy permalink** in the right-click menu when you're
 
 This extension runs in your browser and has no server of its own. The permalink feature reads the page URL to get the thread token and reads your account email from Gmail's interface, just to build the link — it stores nothing and sends nothing.
 
-The favicon feature requests favicon images from Google's public favicon service (`google.com/s2/favicons`) using the sender's email domain. Your favicon exclusion settings are stored in `chrome.storage.sync` so they follow you across devices; nothing else is collected.
+The domain-label feature requests favicon images from Google's public favicon service (`google.com/s2/favicons`) using the sender's email domain. Your domain exclusion settings are stored in `chrome.storage.sync` so they follow you across devices; nothing else is collected.
 
 Because it works by reading Gmail's page structure, it can break if Google updates the Gmail interface. If something stops working, check the [issues page](https://github.com/impca201/gmail-permalink-extension/issues) or open a new one.
 
