@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="popup.css" />
+    <title>Gmail Extension</title>
+  </head>
+  <body>
+    <header class="header">
+      <h1 class="title">Gmail Extension</h1>
+    </header>
+
+    <nav class="tabs" role="tablist">
+      <button class="tab is-active" data-tab="permalink" role="tab">Permalink</button>
+      <button class="tab" data-tab="favicon" role="tab">Favicons</button>
+    </nav>
+
+    <section class="panel is-active" data-panel="permalink">
+      <p class="hint">
+        Right-click any Gmail message and choose <strong>Copy permalink</strong>
+        to copy a stable link to that thread. No settings needed.
+      </p>
+    </section>
+
+    <section class="panel" data-panel="favicon">
+      <p class="hint">
+        A favicon is shown next to each sender, based on their email domain.
+        Domains listed below are skipped.
+      </p>
+
+      <div class="field">
+        <div class="field-head">
+          <label for="services">Excluded email services</label>
+          <button id="reset-services" class="link-btn" type="button">
+            Reset to defaults
+          </button>
+        </div>
+        <textarea
+          id="services"
+          rows="8"
+          spellcheck="false"
+          placeholder="one domain per line"
+        ></textarea>
+      </div>
+
+      <div class="field">
+        <label for="custom">Excluded custom domains</label>
+        <textarea
+          id="custom"
+          rows="4"
+          spellcheck="false"
+          placeholder="e.g. example.com"
+        ></textarea>
+      </div>
+
+      <div class="actions">
+        <span id="status" class="status" aria-live="polite"></span>
+        <button id="save" class="primary-btn" type="button">Save</button>
+      </div>
+    </section>
+
+    <script src="../defaults.js"></script>
+    <script src="popup.js"></script>
+  </body>
+</html>

@@ -1,9 +1,9 @@
 {
   "extensionName": {
-    "message": "Gmail Permalink"
+    "message": "Gmail Extension"
   },
   "extensionDescription": {
-    "message": "Rechtsklik op een Gmail-bericht om een permalink te kopiëren."
+    "message": "Kopieer permalinks naar Gmail-berichten en toon favicons van afzenders naast e-mailadressen."
   },
   "contextMenuTitle": {
     "message": "Permalink kopiëren"

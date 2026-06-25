@@ -1,9 +1,9 @@
 {
   "extensionName": {
-    "message": "Gmail Permalink"
+    "message": "Gmail Extension"
   },
   "extensionDescription": {
-    "message": "Right-click a Gmail message to copy a permalink directly to that message."
+    "message": "Copy permalinks to Gmail messages and show sender favicons next to email addresses."
   },
   "contextMenuTitle": {
     "message": "Copy permalink"
