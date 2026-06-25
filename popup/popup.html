@@ -17,16 +17,25 @@
     </nav>
 
     <section class="panel is-active" data-panel="permalink">
+      <label class="toggle">
+        <input id="enable-permalink" type="checkbox" />
+        <span>Enable Copy permalink</span>
+      </label>
       <p class="hint">
         Right-click any Gmail message and choose <strong>Copy permalink</strong>
-        to copy a stable link to that thread. No settings needed.
+        to copy a stable link to that thread.
       </p>
     </section>
 
     <section class="panel" data-panel="favicon">
+      <label class="toggle">
+        <input id="enable-sender-label" type="checkbox" />
+        <span>Enable sender labels</span>
+      </label>
       <p class="hint">
-        A favicon is shown next to each sender, based on their email domain.
-        Domains listed below are skipped.
+        A label chip (favicon + domain) is shown as the first label on each
+        conversation, based on the sender's email domain. Domains listed below
+        are skipped.
       </p>
 
       <div class="field">
