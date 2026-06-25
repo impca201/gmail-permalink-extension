@@ -67,6 +67,19 @@ body {
   line-height: 1.4;
 }
 
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.toggle input {
+  margin: 0;
+}
+
 .field {
   margin-bottom: 14px;
 }

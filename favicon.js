@@ -17,9 +17,26 @@
   const LABEL_CLASS = 'gx-domain-label';
   const DEBOUNCE_MS = 150;
 
+  // Second-level public suffixes where the registrable domain is the last three
+  // labels (e.g. yahoo.co.uk), not the last two. Not exhaustive — it's a small
+  // heuristic covering the common cases, including the .co.uk default exclusion.
+  const MULTI_PART_TLDS = new Set([
+    'co.uk', 'org.uk', 'me.uk', 'ltd.uk', 'plc.uk', 'net.uk', 'sch.uk', 'ac.uk', 'gov.uk',
+    'co.jp', 'or.jp', 'ne.jp', 'ac.jp', 'go.jp',
+    'com.au', 'net.au', 'org.au', 'edu.au', 'gov.au',
+    'co.nz', 'net.nz', 'org.nz',
+    'co.za', 'org.za',
+    'com.br', 'net.br', 'org.br',
+    'co.in', 'net.in', 'org.in',
+    'com.cn', 'net.cn', 'org.cn',
+    'com.mx', 'com.ar', 'com.tr', 'com.sg', 'com.hk', 'com.tw', 'com.my',
+    'co.kr', 'or.kr',
+  ]);
+
   // Exclusion lists are merged into this set at runtime. Until storage loads we
   // keep the defaults so the first injection pass already behaves sanely.
   let excludedDomains = new Set(GX_DEFAULT_EXCLUDE_SERVICES);
+  let enabled = GX_DEFAULT_ENABLED[GX_STORAGE_KEYS.enableSenderLabel];
 
   function rebuildExclusions(services, custom) {
     const merged = [...(services || []), ...(custom || [])]
@@ -28,30 +45,42 @@
     excludedDomains = new Set(merged);
   }
 
-  function loadExclusions() {
+  function removeAllChips() {
+    document.querySelectorAll(`.${LABEL_CLASS}`).forEach((el) => el.remove());
+  }
+
+  function loadSettings(afterLoad) {
     chrome.storage.sync.get(
       {
         [GX_STORAGE_KEYS.services]: GX_DEFAULT_EXCLUDE_SERVICES,
         [GX_STORAGE_KEYS.custom]: [],
+        [GX_STORAGE_KEYS.enableSenderLabel]:
+          GX_DEFAULT_ENABLED[GX_STORAGE_KEYS.enableSenderLabel],
       },
       (stored) => {
         rebuildExclusions(
           stored[GX_STORAGE_KEYS.services],
           stored[GX_STORAGE_KEYS.custom]
         );
-        injectDomainLabels();
+        enabled = stored[GX_STORAGE_KEYS.enableSenderLabel];
+        if (afterLoad) afterLoad();
       }
     );
   }
 
-  // Re-read settings and refresh when the user edits them in the popup. Existing
-  // chips are dropped first so newly-excluded domains disappear immediately.
+  // React to popup edits: rebuild chips so newly-excluded domains disappear and
+  // the feature toggle takes effect immediately.
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area !== 'sync') return;
-    if (changes[GX_STORAGE_KEYS.services] || changes[GX_STORAGE_KEYS.custom]) {
-      document.querySelectorAll(`.${LABEL_CLASS}`).forEach((el) => el.remove());
-      loadExclusions();
-    }
+    const relevant =
+      changes[GX_STORAGE_KEYS.services] ||
+      changes[GX_STORAGE_KEYS.custom] ||
+      changes[GX_STORAGE_KEYS.enableSenderLabel];
+    if (!relevant) return;
+    removeAllChips();
+    loadSettings(() => {
+      if (enabled) injectDomainLabels();
+    });
   });
 
   function domainFromEmail(email) {
@@ -60,6 +89,16 @@
     if (at === -1) return null;
     const domain = email.slice(at + 1).trim().toLowerCase();
     return domain || null;
+  }
+
+  // Collapse a subdomain to its registrable ("main") domain, so a sender at
+  // mail.example.com is shown and looked up as example.com.
+  function registrableDomain(domain) {
+    const parts = domain.split('.');
+    if (parts.length <= 2) return domain;
+    const lastTwo = parts.slice(-2).join('.');
+    if (MULTI_PART_TLDS.has(lastTwo)) return parts.slice(-3).join('.');
+    return lastTwo;
   }
 
   function faviconUrl(domain) {
@@ -88,10 +127,15 @@
     return chip;
   }
 
+  // Resolve an address to the registrable domain to display, or null if excluded.
+  // Exclusions are matched against both the full domain and the registrable one,
+  // so a user can exclude either "example.com" or a specific "sub.example.com".
   function usableDomain(email) {
-    const domain = domainFromEmail(email);
-    if (!domain || excludedDomains.has(domain)) return null;
-    return domain;
+    const full = domainFromEmail(email);
+    if (!full) return null;
+    const root = registrableDomain(full);
+    if (excludedDomains.has(full) || excludedDomains.has(root)) return null;
+    return root;
   }
 
   // Return the first non-excluded domain among the addressed elements under
@@ -150,6 +194,7 @@
   }
 
   function injectDomainLabels() {
+    if (!enabled) return;
     injectListView();
     injectConversationView();
   }
@@ -165,5 +210,5 @@
   const observer = new MutationObserver(debounce(injectDomainLabels, DEBOUNCE_MS));
   observer.observe(document.body, { childList: true, subtree: true });
 
-  loadExclusions();
+  loadSettings(injectDomainLabels);
 })();

@@ -3,6 +3,14 @@
 const GX_STORAGE_KEYS = {
   services: 'favicon_exclude_services',
   custom: 'favicon_exclude_custom',
+  enablePermalink: 'enable_permalink',
+  enableSenderLabel: 'enable_sender_label',
+};
+
+// Feature toggles default to on, so existing users keep both features.
+const GX_DEFAULT_ENABLED = {
+  [GX_STORAGE_KEYS.enablePermalink]: true,
+  [GX_STORAGE_KEYS.enableSenderLabel]: true,
 };
 
 // Common free/shared email providers. Their favicon is the provider's, not the

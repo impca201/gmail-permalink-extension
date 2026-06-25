@@ -1,16 +1,34 @@
-function createContextMenu() {
-  chrome.contextMenus.removeAll(() => {
-    chrome.contextMenus.create({
-      id: 'gmail-copy-permalink',
-      title: chrome.i18n.getMessage('contextMenuTitle') || 'Copy permalink',
-      contexts: ['all'],
-      documentUrlPatterns: ['https://mail.google.com/*'],
-    });
-  });
+importScripts('defaults.js');
+
+// Rebuild the context menu from the current toggle: present it only while the
+// permalink feature is enabled.
+function refreshContextMenu() {
+  chrome.storage.sync.get(
+    {
+      [GX_STORAGE_KEYS.enablePermalink]:
+        GX_DEFAULT_ENABLED[GX_STORAGE_KEYS.enablePermalink],
+    },
+    (settings) => {
+      chrome.contextMenus.removeAll(() => {
+        if (!settings[GX_STORAGE_KEYS.enablePermalink]) return;
+        chrome.contextMenus.create({
+          id: 'gmail-copy-permalink',
+          title: chrome.i18n.getMessage('contextMenuTitle') || 'Copy permalink',
+          contexts: ['all'],
+          documentUrlPatterns: ['https://mail.google.com/*'],
+        });
+      });
+    }
+  );
 }
 
-chrome.runtime.onInstalled.addListener(createContextMenu);
-chrome.runtime.onStartup.addListener(createContextMenu);
+chrome.runtime.onInstalled.addListener(refreshContextMenu);
+chrome.runtime.onStartup.addListener(refreshContextMenu);
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === 'sync' && changes[GX_STORAGE_KEYS.enablePermalink]) {
+    refreshContextMenu();
+  }
+});
 
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   if (info.menuItemId !== 'gmail-copy-permalink') return;
