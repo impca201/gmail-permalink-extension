@@ -94,6 +94,18 @@
     return domain;
   }
 
+  // Return the first non-excluded domain among the addressed elements under
+  // `root`, in document order. Scanning all of them (rather than just the first)
+  // means a thread where you are the first sender still resolves to the external
+  // participant instead of being skipped because your own domain is excluded.
+  function firstUsableDomain(root) {
+    for (const el of root.querySelectorAll('[email]')) {
+      const domain = usableDomain(el.getAttribute('email'));
+      if (domain) return domain;
+    }
+    return null;
+  }
+
   // --- List / label overview ---------------------------------------------
   // Each row's subject cell (.xT) holds an optional labels container (.yi).
   // Inject the chip as the first label there; when a row has no labels we fall
@@ -103,20 +115,17 @@
       if (cell.querySelector(`.${LABEL_CLASS}`)) continue;
       const row = cell.closest('[role="row"]') || cell.closest('tr');
       if (!row) continue;
-      const senderEl = row.querySelector('[email]');
-      const domain = senderEl && usableDomain(senderEl.getAttribute('email'));
+      const domain = firstUsableDomain(row);
       if (!domain) continue;
       const host = cell.querySelector('.yi') || cell;
       host.insertBefore(buildLabel(domain), host.firstChild);
     }
   }
 
-  // The conversation's main sender — the name span in a message header carries
-  // both `email` and the `gD` class. Fall back to any addressed element.
+  // The conversation's external party — the first addressed element whose domain
+  // isn't excluded, which skips your own (excluded) address in a two-party thread.
   function conversationSenderDomain() {
-    const sender =
-      document.querySelector('.gD[email]') || document.querySelector('[email]');
-    return sender ? usableDomain(sender.getAttribute('email')) : null;
+    return firstUsableDomain(document);
   }
 
   // --- Conversation view --------------------------------------------------
