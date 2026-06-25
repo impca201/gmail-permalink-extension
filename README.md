@@ -1,10 +1,15 @@
-# Gmail Permalink Extension
+# Gmail Extension
 
-A browser extension that adds a **Copy permalink** option to Gmail's right-click menu, so you can get a permanent link to any email thread in one click.
+A browser extension for Gmail with two features:
+
+1. **Copy permalink** — adds a right-click option to copy a permanent link to any email thread.
+2. **Sender favicons** — shows a small favicon next to each sender, based on their email domain.
 
 ---
 
 ## What it does
+
+### Copy permalink
 
 Gmail doesn't make it easy to share a direct link to a specific email. The URL in your address bar depends on which folder or label you're in, which makes those links fragile. They break as soon as someone opens the email from a different view.
 
@@ -12,9 +17,15 @@ This extension adds **Copy permalink** to Gmail's right-click menu. When you rig
 
 - Goes to that specific email thread
 - Works regardless of which folder or label the recipient is viewing
-- Pins to the account you're viewing (via Gmail's `/u/<index>/` path), so it opens correctly if you're signed into multiple Google accounts — personal and Workspace alike
+- Pins to the account you're viewing (via the `authuser` parameter), so it opens correctly if you're signed into multiple Google accounts — personal and Workspace alike
 
 The link uses Gmail's `#all/<token>` format, which bypasses folder routing.
+
+### Sender favicons
+
+Next to each sender — in both the message list and an open conversation — the extension shows a 16×16 favicon for that sender's email domain, fetched from Google's favicon service. It's a quick visual cue for who sent a message.
+
+Free/shared email providers (gmail.com, outlook.com, …) are excluded by default, since their favicon reflects the provider rather than the sender. You can edit both the default exclusion list and your own custom exclusions from the extension's popup. Settings sync across your devices via `chrome.storage.sync`.
 
 **Available in English and Dutch.**
 
@@ -22,10 +33,18 @@ The link uses Gmail's `#all/<token>` format, which bypasses folder routing.
 
 ## How to use it
 
+### Copy permalink
+
 1. Open [mail.google.com](https://mail.google.com) and open any email thread.
 2. Right-click anywhere inside the email body or header.
 3. Select **Copy permalink** from the context menu.
 4. The link is in your clipboard. Paste it wherever you need it.
+
+### Favicon settings
+
+1. Click the extension's toolbar icon to open the popup.
+2. Switch to the **Favicons** tab.
+3. Edit the excluded email services or add your own custom domains (one per line), then click **Save**. Use **Reset to defaults** to restore the built-in service list.
 
 ---
 
@@ -65,7 +84,9 @@ That's it. You'll now see **Copy permalink** in the right-click menu when you're
 
 ## Privacy
 
-This extension runs in your browser. It doesn't send data anywhere and has no server. It reads the page URL to get the thread token and reads your account email from Gmail's interface, just to build the link. It stores nothing and sends nothing.
+This extension runs in your browser and has no server of its own. The permalink feature reads the page URL to get the thread token and reads your account email from Gmail's interface, just to build the link — it stores nothing and sends nothing.
+
+The favicon feature requests favicon images from Google's public favicon service (`google.com/s2/favicons`) using the sender's email domain. Your favicon exclusion settings are stored in `chrome.storage.sync` so they follow you across devices; nothing else is collected.
 
 Because it works by reading Gmail's page structure, it can break if Google updates the Gmail interface. If something stops working, check the [issues page](https://github.com/impca201/gmail-permalink-extension/issues) or open a new one.
 
