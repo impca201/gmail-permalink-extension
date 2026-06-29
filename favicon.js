@@ -150,19 +150,36 @@
     return null;
   }
 
+  // Replace any chip already under `host` whose domain differs from `domain`,
+  // and inject a fresh one when needed. Gmail recycles row and label-strip
+  // elements across navigation, so a stale chip from a previous conversation
+  // can linger on a reused host — comparing the domain rids us of it.
+  function applyChip(host, domain) {
+    const existing = host.querySelector(`.${LABEL_CLASS}`);
+    if (existing) {
+      if (existing.dataset.gxDomain === domain) return;
+      existing.remove();
+    }
+    if (domain) host.insertBefore(buildLabel(domain), host.firstChild);
+  }
+
   // --- List / label overview ---------------------------------------------
   // Each row's subject cell (.xT) holds an optional labels container (.yi).
   // Inject the chip as the first label there; when a row has no labels we fall
   // back to the cell itself so the chip still leads the subject line.
   function injectListView() {
     for (const cell of document.querySelectorAll('.xT')) {
-      if (cell.querySelector(`.${LABEL_CLASS}`)) continue;
       const row = cell.closest('[role="row"]') || cell.closest('tr');
       if (!row) continue;
       const domain = firstUsableDomain(row);
-      if (!domain) continue;
       const host = cell.querySelector('.yi') || cell;
-      host.insertBefore(buildLabel(domain), host.firstChild);
+      // Anchor the chip on the cell so an existing one is found even if Gmail
+      // added/removed the .yi container since the last pass.
+      const existing = cell.querySelector(`.${LABEL_CLASS}`);
+      if (existing && existing.dataset.gxDomain !== domain) existing.remove();
+      if (domain && !cell.querySelector(`.${LABEL_CLASS}`)) {
+        host.insertBefore(buildLabel(domain), host.firstChild);
+      }
     }
   }
 
@@ -185,12 +202,7 @@
     if (hosts.size === 0) return;
 
     const domain = conversationSenderDomain();
-    if (!domain) return;
-
-    for (const host of hosts) {
-      if (host.querySelector(`.${LABEL_CLASS}`)) continue;
-      host.insertBefore(buildLabel(domain), host.firstChild);
-    }
+    for (const host of hosts) applyChip(host, domain);
   }
 
   function injectDomainLabels() {
