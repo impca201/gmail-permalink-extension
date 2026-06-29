@@ -138,12 +138,21 @@
     return root;
   }
 
+  // An element Gmail keeps in the DOM but hidden (e.g. a previously-opened
+  // conversation) has no layout box. Skipping these is what keeps a stale
+  // thread's sender from leaking into the current one.
+  function isVisible(el) {
+    return el.offsetParent !== null || el.getClientRects().length > 0;
+  }
+
   // Return the first non-excluded domain among the addressed elements under
   // `root`, in document order. Scanning all of them (rather than just the first)
   // means a thread where you are the first sender still resolves to the external
   // participant instead of being skipped because your own domain is excluded.
-  function firstUsableDomain(root) {
+  // When `requireVisible` is set, hidden (off-screen/cached) elements are ignored.
+  function firstUsableDomain(root, requireVisible) {
     for (const el of root.querySelectorAll('[email]')) {
+      if (requireVisible && !isVisible(el)) continue;
       const domain = usableDomain(el.getAttribute('email'));
       if (domain) return domain;
     }
@@ -186,11 +195,12 @@
   // The conversation's external party, scoped to the open thread. Gmail keeps
   // previously-viewed conversations in the DOM, so searching the whole document
   // would pick an earlier thread's sender (the "cached label" bug). Climb from
-  // the label strip until an ancestor contains an addressed element: that's the
-  // current conversation's own subtree, with the prior thread left outside it.
+  // the label strip until an ancestor contains a *visible* addressed element:
+  // the prior thread's senders are hidden, so they're skipped, and a shared
+  // ancestor no longer leaks the wrong domain.
   function conversationSenderDomainFor(host) {
     for (let node = host; node && node !== document.body; node = node.parentElement) {
-      const domain = firstUsableDomain(node);
+      const domain = firstUsableDomain(node, true);
       if (domain) return domain;
     }
     return null;
