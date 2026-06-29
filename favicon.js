@@ -183,10 +183,17 @@
     }
   }
 
-  // The conversation's external party — the first addressed element whose domain
-  // isn't excluded, which skips your own (excluded) address in a two-party thread.
-  function conversationSenderDomain() {
-    return firstUsableDomain(document);
+  // The conversation's external party, scoped to the open thread. Gmail keeps
+  // previously-viewed conversations in the DOM, so searching the whole document
+  // would pick an earlier thread's sender (the "cached label" bug). Climb from
+  // the label strip until an ancestor contains an addressed element: that's the
+  // current conversation's own subtree, with the prior thread left outside it.
+  function conversationSenderDomainFor(host) {
+    for (let node = host; node && node !== document.body; node = node.parentElement) {
+      const domain = firstUsableDomain(node);
+      if (domain) return domain;
+    }
+    return null;
   }
 
   // --- Conversation view --------------------------------------------------
@@ -199,10 +206,9 @@
       const wrapper = btn.closest('.ahR');
       if (wrapper && wrapper.parentElement) hosts.add(wrapper.parentElement);
     }
-    if (hosts.size === 0) return;
-
-    const domain = conversationSenderDomain();
-    for (const host of hosts) applyChip(host, domain);
+    for (const host of hosts) {
+      applyChip(host, conversationSenderDomainFor(host));
+    }
   }
 
   function injectDomainLabels() {
