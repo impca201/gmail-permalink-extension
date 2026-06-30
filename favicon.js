@@ -117,7 +117,7 @@
     img.alt = '';
     img.setAttribute('aria-hidden', 'true');
     // No favicon? Drop the image but keep the readable domain text.
-    img.addEventListener('error', () => img.remove());
+    img.onerror = () => img.remove();
 
     const text = document.createElement('span');
     text.className = 'gx-domain-text';
@@ -145,31 +145,38 @@
     return el.offsetParent !== null || el.getClientRects().length > 0;
   }
 
-  // Return the first non-excluded domain among the addressed elements under
-  // `root`, in document order. Scanning all of them (rather than just the first)
-  // means a thread where you are the first sender still resolves to the external
-  // participant instead of being skipped because your own domain is excluded.
-  // When `requireVisible` is set, hidden (off-screen/cached) elements are ignored.
-  function firstUsableDomain(root, requireVisible) {
+  // Resolve which domain to show under `root`. Scanning every addressed element
+  // (not just the first) means a thread where you are the first sender still
+  // resolves to the external participant. With `requireVisible`, hidden
+  // (off-screen/cached) elements are ignored. The tri-state return distinguishes
+  // the two reasons there's no domain, which is what kills the list-view flicker:
+  //   string -> show this domain
+  //   ''     -> addressed elements exist but all are excluded: clear the chip
+  //   null   -> Gmail hasn't populated an address here yet: leave the chip as-is
+  function resolveDomain(root, requireVisible) {
+    let seen = false;
     for (const el of root.querySelectorAll('[email]')) {
       if (requireVisible && !isVisible(el)) continue;
+      seen = true;
       const domain = usableDomain(el.getAttribute('email'));
       if (domain) return domain;
     }
-    return null;
+    return seen ? '' : null;
   }
 
-  // Replace any chip already under `host` whose domain differs from `domain`,
-  // and inject a fresh one when needed. Gmail recycles row and label-strip
-  // elements across navigation, so a stale chip from a previous conversation
-  // can linger on a reused host — comparing the domain rids us of it.
-  function applyChip(host, domain) {
-    const existing = host.querySelector(`.${LABEL_CLASS}`);
+  // Reconcile the chip under `scope` with `domain`, inserting fresh chips at the
+  // front of `anchor`. Gmail recycles row and label-strip elements across
+  // navigation, so a stale chip from a previous conversation can linger on a
+  // reused host — comparing the domain rids us of it. A null domain means the
+  // address hasn't loaded yet, so we keep any existing chip rather than flicker.
+  function applyChip(scope, anchor, domain) {
+    if (domain === null) return;
+    const existing = scope.querySelector(`.${LABEL_CLASS}`);
     if (existing) {
       if (existing.dataset.gxDomain === domain) return;
       existing.remove();
     }
-    if (domain) host.insertBefore(buildLabel(domain), host.firstChild);
+    if (domain) anchor.insertBefore(buildLabel(domain), anchor.firstChild);
   }
 
   // --- List / label overview ---------------------------------------------
@@ -180,15 +187,11 @@
     for (const cell of document.querySelectorAll('.xT')) {
       const row = cell.closest('[role="row"]') || cell.closest('tr');
       if (!row) continue;
-      const domain = firstUsableDomain(row);
+      // Search on the cell so an existing chip is found even if Gmail added or
+      // removed the .yi labels container since the last pass; insert into .yi
+      // when present so the chip leads the labels, else into the cell itself.
       const host = cell.querySelector('.yi') || cell;
-      // Anchor the chip on the cell so an existing one is found even if Gmail
-      // added/removed the .yi container since the last pass.
-      const existing = cell.querySelector(`.${LABEL_CLASS}`);
-      if (existing && existing.dataset.gxDomain !== domain) existing.remove();
-      if (domain && !cell.querySelector(`.${LABEL_CLASS}`)) {
-        host.insertBefore(buildLabel(domain), host.firstChild);
-      }
+      applyChip(cell, host, resolveDomain(row, false));
     }
   }
 
@@ -199,11 +202,18 @@
   // the prior thread's senders are hidden, so they're skipped, and a shared
   // ancestor no longer leaks the wrong domain.
   function conversationSenderDomainFor(host) {
+    let seen = false;
     for (let node = host; node && node !== document.body; node = node.parentElement) {
-      const domain = firstUsableDomain(node, true);
-      if (domain) return domain;
+      for (const el of node.querySelectorAll('[email]')) {
+        if (!isVisible(el)) continue;
+        seen = true;
+        const domain = usableDomain(el.getAttribute('email'));
+        if (domain) return domain;
+      }
     }
-    return null;
+    // '' clears a stale chip once the thread is visible but has no usable sender;
+    // null (nothing visible yet) keeps the current chip while the thread loads.
+    return seen ? '' : null;
   }
 
   // --- Conversation view --------------------------------------------------
@@ -217,7 +227,7 @@
       if (wrapper && wrapper.parentElement) hosts.add(wrapper.parentElement);
     }
     for (const host of hosts) {
-      applyChip(host, conversationSenderDomainFor(host));
+      applyChip(host, host, conversationSenderDomainFor(host));
     }
   }
 
